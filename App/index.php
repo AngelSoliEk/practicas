@@ -2,13 +2,12 @@
 // Default allow requests from everywhere. You can remove it if you want
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+error_reporting(E_ALL);
+ini_set("display_errors", "On");
 
-require 'Core/constants.php';
-#require __DIR__ . '/vendor/autoload.php';
+require '../constants.php';
 
-use PRACTICA\App\Controllers;
-
-echo $uri = $_SERVER['REQUEST_URI'];
+$uri = $_SERVER['REQUEST_URI'];
 
 if ($uri == '/') {
     $response = ['response' => 'No content to show'];
@@ -17,21 +16,25 @@ if ($uri == '/') {
 }
 
 $src        = explode('/', $uri);
-$model      = "menu";//ucfirst($src[1]);
+$model      = ucfirst($src[3]);
 $controller = $model . 'Controller';
-$method  = 'index';
 
-if (isset($src[3]) && empty($the_request)) {
-    $the_request = filter_var($src[3], FILTER_SANITIZE_STRING);
+if (isset($src[4])) {
+    $method = $src[4];
+}
+
+if (isset($src[5]) && empty($the_request)) {
+    $the_request = filter_var($src[5], FILTER_SANITIZE_STRING);
 }
 
 /*
 * call current class/method
 */
 try {
-   $load_class = 'PRACTICA\App\Controller\\' . $controller;
-   $class      = new $load_class();
-    $set        = $class->$method($the_request);
+    $load_class = FULL_APP_CONTROLLERS . $controller;
+    include_once $load_class . PHP;
+    $class = new $controller();
+    $set = $class->$method($the_request);
     var_dump($set);
 } catch (Exception $e) {
     echo 'No ' . $controller . ' found for this route', $e->getMessage(), "\n";
@@ -40,7 +43,7 @@ try {
 /*
 * Declare all variables if passed in return
 */
-if ( ! empty($set) && is_array($set)) {
+if (!empty($set) && is_array($set)) {
     foreach ($set as $k => $v) {
         ${$k} = $v;
     }
